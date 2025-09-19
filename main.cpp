@@ -1,130 +1,82 @@
 #include <iostream>
 #include <cmath>
+#include <windows.h>
 
 
-double f_origial(double x){
-    return 2 * x - log10(x) - 7;
+//      原始函数
+double function_original(double x){
+    return std::pow(x , 3) - std::pow(x , 2) - 1;
 }
 
-double f_iterative(double x){
-    return 0.5 * (log10(x) + 7);
+
+//      求导函数
+double derivative(double x){
+    constexpr double delta_x = 1e-8;
+    return (function_original(x + delta_x) - function_original(x))/(delta_x);
 }
 
-double Bisection_method(double a , double b , double epsilon){
-    double x_avg = 0;
-    double x_1 = 0;
-    double x_2 = 0;
 
-    constexpr double eps = 1e-12;       // 宏定义没有作用域，容易污染全局变量,不利于调试
+//      迭代函数
+double function_iteriate(double x){
+    return x - function_original(x) / derivative(x);
+}
 
-    x_avg = (a + b) / 2;
+// 检查一阶导函数是否符合条件
+examine_derivative(double a , double b){
+    constexpr double eps = 1e-8;
 
-    do {
-        if(fabs(f_origial(x_avg)) <= eps){
-            return x_avg;
+    for (double x = a; x < b; x += 0.01){
+        if (derivative(x) < eps){
+            return false;
         }
-        else if(f_origial(x_avg) * f_origial(a) < 0 and f_origial(x_avg) * f_origial(b) > 0){
-            a = a;
-            b = x_avg;
-
-        }
-        else if(f_origial(x_avg) * f_origial(b) < 0 and f_origial(x_avg) * f_origial(a) > 0){
-            a = x_avg;
-            b = b;
-        }
-        x_1 = x_avg;
-        x_avg = (a + b)/2;
-    } while (std::fabs(x_1 - x_2) >= epsilon);
-
-    return x_avg;
-
-}
-
-
-
-double Simple_Iteration_Method(double epsilon , double x_0){
-    double x_b = 0;
-    do{
-        x_b = x_0;
-        x_0 = f_iterative(x_0);
-
-    }while(std::fabs(x_b - x_0) >= epsilon);
-
-    return x_0;
-}
-
-
-double Aikten_Acceleration_Formula(double x_0 , double x_1 , double x_2 ){
-    return x_0 - std::pow(x_1 - x_0 , 2) / (x_2 - 2 * x_1 + x_0);
-}
-
-
-double Aitken_Method(double x_0, double epsilon){
-
-    double x_1 = 0;
-    double x_2 = 0;
-
-    double x_2_old = 0;
-
-    x_1 = f_iterative(x_0);
-    x_2 = f_iterative(x_1);
-
-    while(std::fabs(x_1 - x_0) >= epsilon){
-        x_2_old = x_2;
-        x_2 = Aikten_Acceleration_Formula(x_0 , x_1 , x_2);
-        x_0 = x_1;
-        x_1 = x_2_old;
     }
-
-    return x_1;
+    return true;
 }
 
 
-double Steffensen_Acceleration_Formula(double x_0){
-    return x_0 - (std::pow(f_iterative(x_0) - x_0 , 2)) / (f_iterative(f_iterative(x_0)) - 2 * f_iterative(x_0) + x_0);
-}
+int main(){
 
-double Steffensen_Method(double x_0 , double epsilon){
-    double x_1 = 0;
+    // #ifdef _WIN32
+    //     system("chcp 65001 >nul");
+    // #endif
 
-    while (std::fabs(x_1 - x_0) >= epsilon){
-        x_1 = Steffensen_Acceleration_Formula(x_0);
-        x_0 = x_1;
-    }
+    // SetConsoleOutputCP(65001);   // 输出编码
+    // SetConsoleCP(65001);         // 输入编码
 
-    return x_1;
-}
-
-
-
-
-int main() {
-
-/*           二分法、简单迭代法及其加速法求解非线性方程             */
-
+    double x_intial = 0;
+    double x_curr = 0;
+    double epsilon = 0;
     double a = 0;
     double b = 0;
-    double epsilon = 0;
-    double x_0 = 0;
 
-    std::cout << "请输入隔根区间：" << std::endl;
+    constexpr double eps = 1e-10;
+
+    std::cout << "请输入区间[a,b]：" << std::endl;
     std::cin >> a >> b;
-    if(a >= b or f_origial(a) * f_origial(b) >= 0){
-        std::cerr << "错误！请检查输入的区间是否符合要求。";
-        return 1;
+
+    // 检查是否符合Newton迭代法的条件
+    if (function_original(a) * function_original(b) > 0) {
+        std::cerr << "区间[a,b]不符合Newton迭代法的条件" << std::endl;
     }
+    else if (examine_derivative(a, b) == false) {
+        std::cerr << "一阶导数不符合条件" << std::endl;
+    }
+
+    std::cout << "请输入初值：" << std::endl;
+    std::cin >> x_intial;
 
     std::cout << "请输入绝对误差限：" << std::endl;
     std::cin >> epsilon;
 
-    std::cout << "请输入初值x_0：" << std::endl;
-    std:: cin >> x_0;
+    x_curr = function_iteriate(x_intial);
+    for (int i = 0; std::fabs(x_curr - x_intial) > epsilon; i++) {
+        x_intial = x_curr;
+        x_curr = function_iteriate(x_intial);
+    }
+    std::cout << "Newton迭代法结果为：" << x_curr << std::endl;
 
-    std::cout << "二分法求解结果" << Bisection_method(a , b , epsilon) << std::endl;
-    std::cout << "简单迭代法求解结果：" << Simple_Iteration_Method(epsilon , x_0) << std::endl;
-    std::cout << "Aitken加速法求解结果：" << Aitken_Method(x_0 , epsilon) << std::endl;
-    std::cout << "Steffensen加速法求解结果：" << Steffensen_Method(x_0 , epsilon) << std::endl;
+
+
 
     return 0;
 }
-

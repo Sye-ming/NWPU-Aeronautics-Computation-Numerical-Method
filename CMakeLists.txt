@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.31)
-project(Numerical_Method_for_Nonlinear_Equation)
+project(Newtons_Method)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(Numerical_Method_for_Nonlinear_Equation main.cpp)
+add_executable(Newtons_Method main.cpp)
+add_compile_options(-finput-charset=UTF-8 -fexec-charset=UTF-8)
